@@ -12,7 +12,6 @@ root = tk.Tk()
 root.title("Complete Graph Of N Points")
 root.geometry('1080x720')
 
-
 frame = tk.Frame(root)  # buttons and stuff go here
 frame.grid(row=0, column=0, sticky=N)
 root.grid_rowconfigure(0, weight=5)
@@ -27,6 +26,7 @@ toolbarFrame.grid(row=2, column=0, columnspan=2, sticky=W)
 
 # --- variable assignment ---
 rand_var = tk.BooleanVar(name="Random Generation", value=False)
+circ_var = tk.BooleanVar(name="Circle Lock", value=True)
 point_var = tk.StringVar(name="Number of Points", value="6")
 width_var = tk.StringVar(name="Width of Lines", value="0.003")
 
@@ -41,8 +41,8 @@ text_vars = [point_var, width_var]
 for i in text_vars:
     tk.Entry(frame, textvariable=i, width=10).grid(sticky="W", row=text_vars.index(i), column=1)
 
-check_vars = [rand_var]
-check_labels = ["Random Generation"]
+check_vars = [rand_var, circ_var]
+check_labels = ["Random Generation", "Circle Lock"]
 
 row_start = len(label_names)  # the minus 1 because .grid positions start at 1
 for a, b in zip(check_labels, check_vars):  # iterates through both check_vars and check_labels at once
@@ -72,21 +72,28 @@ def update():
     rand_gui = rand_var.get()
     point_gui = point_var.get()
     width_gui = width_var.get()
+    circ_gui = circ_var.get()
 
     x_list = (int(point_gui) + counting) * [0]
     y_list = (int(point_gui) + counting) * [0]
 
     # --- assigning random points ---
-    if rand_gui:
+    if rand_gui and circ_gui:
         for i in range(0, len(x_list)):
             t = np.random.uniform(0, 2 * np.pi)
             x_list[i] = np.cos(t) * 0.8
             y_list[i] = np.sin(t) * 0.8
-    else:
+    if (rand_gui is True) and (circ_gui is False):
+        for i in range(0, len(x_list)):
+            x_list[i] = np.random.uniform(-0.8, 0.8)
+            y_list[i] = np.random.uniform(-0.8, 0.8)
+    if (rand_gui is False) and (circ_gui is True):
         for i in range(0, len(x_list)):
             t = t_point(i, [0, len(x_list)], [0, 2 * np.pi])
             x_list[i] = np.cos(t) * 0.8
             y_list[i] = np.sin(t) * 0.8
+    if (rand_gui is False) and (circ_gui is False):
+        print("Please have at least one checkbox selected.")
 
     # --- plotting ---
     splot = fig.add_subplot()
