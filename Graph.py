@@ -2,6 +2,7 @@ import tkinter as tk
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from matplotlib import cm
 import numpy as np
 from tkinter import *
 import ctypes
@@ -62,6 +63,15 @@ def t_point(p, s_1, s_2):  # transforms numbers (p) from s_1 = [a,b] to s_2 = [c
     return (((p - s_1[0]) * (s_2[1] - s_2[0])) / (s_1[1] - s_1[0])) + s_2[0]
 
 
+def avg(s): # finds mean of a list
+    count = 0
+    total = 0
+    while count < len(s):
+        total += s[count]
+        count += 1
+    return total / len(s)
+
+
 # --- update function ---
 def update():
     fig.clear()
@@ -99,11 +109,18 @@ def update():
     splot = fig.add_subplot()
     splot.axis('Equal')
     splot.grid(False)
-    splot.axis('off')
+    # splot.axis('off')
     splot.set_xlim([-1, 1])
     splot.set_ylim([-1, 1])
 
     splot.scatter(x_list, y_list, color='blue')
+
+    # setting up colormap for lines
+    cmap = cm.get_cmap('hot_r')
+    # I need to get the length of any given line and scale it to fit within [0,1]
+
+    # initializing list of lengths to find average
+    lengths = []
 
     p = 0
     while p <= len(x_list):
@@ -112,13 +129,21 @@ def update():
             V = np.array([[
                 (x_list[p - 1] - x_list[q - 1]), (y_list[p - 1] - y_list[q - 1])
             ]])
+            distV = np.sqrt(
+                ((x_list[p - 1] - x_list[q - 1]) * (x_list[p - 1] - x_list[q - 1])) +
+                (y_list[p - 1] - y_list[q - 1]) * (y_list[p - 1] - y_list[q - 1])
+            )  # distance of each line as it is generated
+            lengths.append(distV)
+            distVnorm = t_point(distV, [0, 1.6], [0, 1])  # normalized distance to [0,1]
             splot.quiver(
-                x_list[q - 1], y_list[q - 1], V[:, 0], V[:, 1], color='black',
+                x_list[q - 1], y_list[q - 1], V[:, 0], V[:, 1], color=cmap(distVnorm),
                 angles='xy', scale_units='xy', scale=1,
                 headwidth=1, headlength=0,
                 width=float(width_gui))
             q -= 1
         p += 1
+
+    print(avg(lengths))
 
     canvas.draw()
     canvas.get_tk_widget().grid(row=0, column=0)
